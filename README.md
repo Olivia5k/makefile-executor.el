@@ -22,6 +22,16 @@ Install the `makefile+` package from MELPA
   an interactive prompt for one is shown.  This is added to the
   `projectile-commander` on the `m` key.
 
+### Public API
+
+* `makefile+-execute-target`: Bring up a selection of all the possible
+  targets in the current Makefile, and execute the chosen one. Bound
+  to `C-c C-e` in `makefile-mode`.
+*  `makefile+-execute-project-target`: Bring up a selection of all the
+   Makefiles in the current project. The selected one is executed as
+   per `makefile+-execute-target` above. Bound to the `m` command in
+   `projectile-commander`.
+
 ### License
 
 This project is free software; you can redistribute it and/or modify
