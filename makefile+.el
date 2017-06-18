@@ -1,13 +1,13 @@
 ;;; makefile+.el --- Various extensions to makefile-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2017  Lowe Thiderman
+;; Copyright (C) 2017 Lowe Thiderman
 
 ;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
 ;; URL: https://github.com/thiderman/makefile-plus.el
 ;; Package-Version: 20170613
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.3") (dash "2.13.0") (f "0.19.0") (projectile "0.15.0-cvs") (s "1.10.0"))
-;; Keywords: makefiles, makefile-mode
+;; Package-Requires: ((emacs "24.3") (dash "2.11.0") (f "0.11.0") (projectile "0.10.0") (s "1.10.0"))
+;; Keywords: processes
 
 ;; This file is not part of GNU Emacs.
 
@@ -48,16 +48,16 @@
 (require 'projectile)
 (require 's)
 
-(defvar makefile-plus-special-target "emacs--makefile--list")
+(defvar makefile+-special-target "emacs--makefile--list")
 
 ;; Based on http://stackoverflow.com/a/26339924/983746
-(defvar makefile-plus-list-target-code
+(defvar makefile+-list-target-code
   (format
    ".PHONY: %s\n%s:\n	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'\n"
-   makefile-plus-special-target makefile-plus-special-target)
+   makefile+-special-target makefile+-special-target)
   "Target used to list all other Makefile targets.")
 
-(defun makefile-plus-get-targets (&optional filename)
+(defun makefile+-get-targets (&optional filename)
   "Return a list of all the targets of a Makefile.
 
 To list them in a computed manner, a new special target is added,
@@ -73,46 +73,46 @@ Optional argument FILENAME defaults to current buffer."
              (insert-file-contents filename)
              (buffer-string))
            "\n\n"
-           makefile-plus-list-target-code)))
+           makefile+-list-target-code)))
 
     (f-write-text makefile-contents 'utf-8 file)
 
     (with-temp-buffer
       (shell-command
-       (format "make -f %s %s" file makefile-plus-special-target)
+       (format "make -f %s %s" file makefile+-special-target)
        (current-buffer))
       (delete-file file)
       (s-split "\n" (buffer-string) t))))
 
 ;;;###autoload
-(defun makefile-plus-execute-target (filename)
+(defun makefile+-execute-target (filename)
   "Execute a Makefile target from FILENAME.
 
 FILENAME defaults to current buffer."
   (interactive
    (list (buffer-file-name)))
 
-  (let ((target (completing-read "target: " (makefile-plus-get-targets filename))))
+  (let ((target (completing-read "target: " (makefile+-get-targets filename))))
     (compile (format "make -f %s %s" filename target))))
 
-(define-key makefile-mode-map (kbd "C-c C-e") #'makefile-plus-execute-target)
+(define-key makefile-mode-map (kbd "C-c C-e") #'makefile+-execute-target)
 
 ;;;###autoload
-(defun makefile-plus-execute-project-target ()
+(defun makefile+-execute-project-target ()
   "Choose a Makefile target from all of the Makefiles in the project.
 
 If there are several Makefiles, a prompt to select one of them is shown."
   (interactive)
   (let ((files (-filter (lambda (f) (s-suffix? "makefile" (s-downcase f)))
 			(projectile-current-project-files))))
-    (makefile-plus-execute-target
+    (makefile+-execute-target
      (if (= (length files) 1)
          (car files)
        (completing-read "Makefile: " files)))))
 
 (def-projectile-commander-method ?m
     "Execute makefile targets in project."
-    (makefile-plus-execute-project-target))
+    (makefile+-execute-project-target))
 
 (provide 'makefile+)
 
