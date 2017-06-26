@@ -1,9 +1,9 @@
-;;; makefile+.el --- Various extensions to makefile-mode -*- lexical-binding: t -*-
+;;; makefile-executor.el --- Emacs helpers to run things from makefiles -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2017 Lowe Thiderman
 
 ;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
-;; URL: https://github.com/thiderman/makefile-plus.el
+;; URL: https://github.com/thiderman/makefile-executor.el
 ;; Package-Version: 20170613
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.3") (dash "2.11.0") (f "0.11.0") (projectile "0.10.0") (s "1.10.0"))
@@ -32,12 +32,16 @@
 ;;
 ;; Currently available:
 ;; - Interactively selecting a make target and running it.
-;;   Bound to 'C-c C-e'.
+;;   Bound to 'C-c C-e' when 'makefile-executor-mode' is enabled.
 ;; - Calculation of variables et.c.; $(BINARY) will show up as what it
 ;;   evaluates to.
 ;; - Execution from any buffer in a project.  If more than one is found,
 ;;   an interactive prompt for one is shown.  This is added to the
 ;;   `projectile-commander' on the 'm' key.
+;;
+;; To enable it, use the following snippet to add the hook into 'makefile-mode':
+;;
+;; (add-hook 'makefile-mode-hook 'makefile-executor-mode)
 ;;
 ;;; Code:
 
@@ -48,16 +52,31 @@
 (require 'projectile)
 (require 's)
 
-(defvar makefile+-special-target "emacs--makefile--list")
+(defvar makefile-executor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-e") 'makefile-executor-execute-target)
+    map)
+  "Keymap for `makefile-executor-mode'.")
+
+(define-minor-mode makefile-executor-mode
+  "Turn `makefile-executor' mode on if ARG is positive, off otherwise.
+
+Bindings in `makefile-mode':
+\\{makefile-executor-mode-map}"
+  :global nil
+  :lighter " executor"
+  :keymap makefile-executor-mode-map)
+
+(defvar makefile-executor-special-target "emacs--makefile--list")
 
 ;; Based on http://stackoverflow.com/a/26339924/983746
-(defvar makefile+-list-target-code
+(defvar makefile-executor-list-target-code
   (format
    ".PHONY: %s\n%s:\n	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'\n"
-   makefile+-special-target makefile+-special-target)
+   makefile-executor-special-target makefile-executor-special-target)
   "Target used to list all other Makefile targets.")
 
-(defun makefile+-get-targets (&optional filename)
+(defun makefile-executor-get-targets (&optional filename)
   "Return a list of all the targets of a Makefile.
 
 To list them in a computed manner, a new special target is added,
@@ -73,47 +92,49 @@ Optional argument FILENAME defaults to current buffer."
              (insert-file-contents filename)
              (buffer-string))
            "\n\n"
-           makefile+-list-target-code)))
+           makefile-executor-list-target-code)))
 
     (f-write-text makefile-contents 'utf-8 file)
 
     (with-temp-buffer
       (shell-command
-       (format "make -f %s %s" file makefile+-special-target)
+       (format "make -f %s %s"
+               (shell-quote-argument file)
+               makefile-executor-special-target)
        (current-buffer))
       (delete-file file)
       (s-split "\n" (buffer-string) t))))
 
 ;;;###autoload
-(defun makefile+-execute-target (filename)
+(defun makefile-executor-execute-target (filename)
   "Execute a Makefile target from FILENAME.
 
 FILENAME defaults to current buffer."
   (interactive
    (list (buffer-file-name)))
 
-  (let ((target (completing-read "target: " (makefile+-get-targets filename))))
-    (compile (format "make -f %s %s" filename target))))
-
-(define-key makefile-mode-map (kbd "C-c C-e") #'makefile+-execute-target)
+  (let ((target (completing-read "target: " (makefile-executor-get-targets filename))))
+    (compile (format "make -f %s %s"
+                     (shell-quote-argument filename)
+                     target))))
 
 ;;;###autoload
-(defun makefile+-execute-project-target ()
+(defun makefile-executor-execute-project-target ()
   "Choose a Makefile target from all of the Makefiles in the project.
 
 If there are several Makefiles, a prompt to select one of them is shown."
   (interactive)
   (let ((files (-filter (lambda (f) (s-suffix? "makefile" (s-downcase f)))
 			(projectile-current-project-files))))
-    (makefile+-execute-target
+    (makefile-executor-execute-target
      (if (= (length files) 1)
          (car files)
        (completing-read "Makefile: " files)))))
 
 (def-projectile-commander-method ?m
     "Execute makefile targets in project."
-    (makefile+-execute-project-target))
+    (makefile-executor-execute-project-target))
 
-(provide 'makefile+)
+(provide 'makefile-executor)
 
-;;; makefile+.el ends here
+;;; makefile-executor.el ends here

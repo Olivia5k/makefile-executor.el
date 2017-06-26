@@ -1,4 +1,4 @@
-# makefile+.el
+# makefile-executor.el
 
 *Various extensions to makefile-mode*
 
@@ -10,12 +10,19 @@ it's value in the minibuffer selection.
 
 ### Installation
 
-Install the `makefile+` package from MELPA
+Install the `makefile-executor` package from MELPA!
+
+Using `use-package`:
+```
+(use-package makefile-executor
+  :config
+  (add-hook 'makefile-mode-hook 'makefile-executor-mode))
+```
 
 ### Features
 
-- Interactively selecting a make target and running it.  Bound to `C-c
-  C-e` in `makefile-mode`.
+- Interactively selecting a make target and running it.  Bound
+  to `C-c C-e` in `makefile-mode` when `makefile-executor-mode` is enabled.
 - Calculation of variables et.c.; `$(BINARY)` will show up as what it
   evaluates to.
 - Execution from any buffer in a project.  If more than one is found,
@@ -24,13 +31,11 @@ Install the `makefile+` package from MELPA
 
 ### Public API
 
-* `makefile+-execute-target`: Bring up a selection of all the possible
-  targets in the current Makefile, and execute the chosen one. Bound
-  to `C-c C-e` in `makefile-mode`.
-*  `makefile+-execute-project-target`: Bring up a selection of all the
+* `makefile-executor-execute-target`: Bring up a selection of all the possible
+  targets in the current Makefile, and execute the chosen one. .
+*  `makefile-executor-execute-project-target`: Bring up a selection of all the
    Makefiles in the current project. The selected one is executed as
-   per `makefile+-execute-target` above. Bound to the `m` command in
-   `projectile-commander`.
+   per `makefile-executor-execute-target` above.
 
 ### License
 
