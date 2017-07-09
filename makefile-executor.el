@@ -1,4 +1,4 @@
-;;; makefile-executor.el --- Emacs helpers to run things from makefiles -*- lexical-binding: t -*-
+;;; makefile-executor.el --- Commands for conveniently running makefile targets -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2017 Lowe Thiderman
 
