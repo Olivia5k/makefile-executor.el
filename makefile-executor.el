@@ -55,6 +55,7 @@
 (defvar makefile-executor-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-e") 'makefile-executor-execute-target)
+    (define-key map (kbd "C-c C-c") 'makefile-executor-execute-last)
     map)
   "Keymap for `makefile-executor-mode'.")
 
@@ -68,6 +69,8 @@ Bindings in `makefile-mode':
   :keymap makefile-executor-mode-map)
 
 (defvar makefile-executor-special-target "emacs--makefile--list")
+
+(setq makefile-executor-cache (make-hash-table :test 'equal))
 
 ;; Based on http://stackoverflow.com/a/26339924/983746
 (defvar makefile-executor-list-target-code
@@ -106,14 +109,18 @@ Optional argument FILENAME defaults to current buffer."
       (s-split "\n" (buffer-string) t))))
 
 ;;;###autoload
-(defun makefile-executor-execute-target (filename)
+(defun makefile-executor-execute-target (filename &optional target)
   "Execute a Makefile target from FILENAME.
 
 FILENAME defaults to current buffer."
   (interactive
    (list (buffer-file-name)))
 
-  (let ((target (completing-read "target: " (makefile-executor-get-targets filename))))
+  (let ((target (or target
+                    (completing-read "target: " (makefile-executor-get-targets filename)))))
+    (puthash (projectile-project-root)
+             (list filename target)
+             makefile-executor-cache)
     (compile (format "make -f %s %s"
                      (shell-quote-argument filename)
                      target))))
@@ -130,6 +137,19 @@ If there are several Makefiles, a prompt to select one of them is shown."
      (if (= (length files) 1)
          (car files)
        (completing-read "Makefile: " files)))))
+
+;;;###autoload
+(defun makefile-executor-execute-last ()
+  "Execute the most recently executed Makefile target.
+
+If none is set, prompt for it using `makefile-executor-execute-project-target'."
+  (interactive)
+  (let ((targets (gethash (projectile-project-root)
+                          makefile-executor-cache)))
+    (if (not targets)
+        (makefile-executor-execute-project-target)
+      (makefile-executor-execute-target (car targets)
+                                        (cadr targets)))))
 
 (def-projectile-commander-method ?m
     "Execute makefile targets in project."
