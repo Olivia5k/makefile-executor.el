@@ -29,9 +29,9 @@ Using `use-package`:
   `makefile-executor-mode` is enabled.
 - Calculation of variables et.c.; `$(BINARY)` will show up as what it
   evaluates to.
-- Execution from any buffer in a project.  If more than one is found,
-  an interactive prompt for one is shown.  This is added to the
-  `projectile-commander` on the `m` key.
+- Execution from any buffer in a project.  If more than one Makefile
+  is found, an interactive prompt for one is shown.  This is added to
+  the `projectile-commander` on the `m` key.
 
 ### Public API
 
@@ -40,6 +40,9 @@ Using `use-package`:
 *  `makefile-executor-execute-project-target`: Bring up a selection of all the
    Makefiles in the current project. The selected one is executed as
    per `makefile-executor-execute-target` above.
+*  `makefile-executor-execute-last`: Execute the last makefile target
+   for the project. If none has been run, this executes
+   `makefile-executor-execute-project-target`.
 
 ### License
 
