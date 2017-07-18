@@ -72,6 +72,19 @@ Bindings in `makefile-mode':
 
 (setq makefile-executor-cache (make-hash-table :test 'equal))
 
+(defgroup makefile-executor nil
+  "Conveniently running Makefile targets."
+  :group 'convenience
+  :prefix "makefile-executor-")
+
+(defcustom makefile-executor-projectile-style 'makefile-executor-execute-project-target
+  "Decides what to do when executing from `projectile-commander'."
+  :type '(choice
+          (const :tag "Always choose target"
+                 makefile-executor-execute-project-target)
+          (const :tag "Run most recently executed target"
+                 makefile-executor-execute-last)))
+
 ;; Based on http://stackoverflow.com/a/26339924/983746
 (defvar makefile-executor-list-target-code
   (format
@@ -153,7 +166,7 @@ If none is set, prompt for it using `makefile-executor-execute-project-target'."
 
 (def-projectile-commander-method ?m
     "Execute makefile targets in project."
-    (makefile-executor-execute-project-target))
+    (funcall makefile-executor-projectile-style))
 
 (provide 'makefile-executor)
 
