@@ -24,12 +24,13 @@ Using `use-package`:
 - Interactively selecting a make target and running it.  Bound
   to `C-c C-e` in `makefile-mode` when `makefile-executor-mode` is
   enabled.
-- Re-running the last execution.  We usually run things in makefiles
+- Re-running the last execution.  We usually run things in Makefiles
   _many_ times after all!  Bound to `C-c C-c` in `makefile-mode` when
   `makefile-executor-mode` is enabled.
 - Calculation of variables et.c.; `$(BINARY)` will show up as what it
   evaluates to.
-- Execution from any buffer in a project.  If more than one Makefile
+- If [projectile](https://github.com/bbatsov/projectile) is installed,
+  execution from any buffer in a project.  If more than one Makefile
   is found, an interactive prompt for one is shown.  This is added to
   the `projectile-commander` on the `m` key.
 

@@ -6,7 +6,7 @@
 ;; URL: https://github.com/thiderman/makefile-executor.el
 ;; Package-Version: 20170613
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.3") (dash "2.11.0") (f "0.11.0") (projectile "0.10.0") (s "1.10.0"))
+;; Package-Requires: ((emacs "24.3") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
 ;; Keywords: processes
 
 ;; This file is not part of GNU Emacs.
@@ -33,9 +33,13 @@
 ;; Currently available:
 ;; - Interactively selecting a make target and running it.
 ;;   Bound to 'C-c C-e' when 'makefile-executor-mode' is enabled.
+;; - Re-running the last execution.  We usually run things in
+;;   Makefiles many times after all!  Bound to '`C-c C-c'` in `makefile-mode` when
+;;   'makefile-executor-mode'` is enabled.
 ;; - Calculation of variables et.c.; $(BINARY) will show up as what it
 ;;   evaluates to.
-;; - Execution from any buffer in a project.  If more than one is found,
+;; - If `projectile' is installed, execution from any buffer in a
+;;   project.  If more than one is found,
 ;;   an interactive prompt for one is shown.  This is added to the
 ;;   `projectile-commander' on the 'm' key.
 ;;
@@ -49,8 +53,8 @@
 (require 'dash)
 (require 'f)
 (require 'make-mode)
-(require 'projectile)
 (require 's)
+(require 'projectile nil t)
 
 (defvar makefile-executor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -127,16 +131,33 @@ Optional argument FILENAME defaults to current buffer."
 
 FILENAME defaults to current buffer."
   (interactive
-   (list (buffer-file-name)))
+   (list (file-truename buffer-file-name)))
 
   (let ((target (or target
                     (completing-read "target: " (makefile-executor-get-targets filename)))))
-    (puthash (projectile-project-root)
-             (list filename target)
-             makefile-executor-cache)
+    (makefile-executor-store-cache filename target)
     (compile (format "make -f %s %s"
                      (shell-quote-argument filename)
                      target))))
+
+(defun makefile-executor-store-cache (filename target)
+  "Stores the FILENAME and TARGET in the cache.
+
+If `projectile' is installed, use the `projectile-project-root'. If
+  not, just use the current filename."
+  (puthash (if (featurep 'projectile) (projectile-project-root) filename)
+           (list filename target)
+           makefile-executor-cache))
+
+(defun makefile-executor-get-cache ()
+  "Gets the cache for the current project or Makefile.
+
+If `projectile' is installed, use the `projectile-project-root'. If
+  not, just use the current filename."
+  (gethash (if (featurep 'projectile)
+               (projectile-project-root)
+             (file-truename buffer-file-name))
+           makefile-executor-cache))
 
 ;;;###autoload
 (defun makefile-executor-execute-project-target ()
@@ -144,8 +165,12 @@ FILENAME defaults to current buffer."
 
 If there are several Makefiles, a prompt to select one of them is shown."
   (interactive)
+
+  (when (not (featurep 'projectile))
+    (error "You need to install 'projectile' for this function to work"))
+
   (let ((files (-filter (lambda (f) (s-suffix? "makefile" (s-downcase f)))
-			(projectile-current-project-files))))
+                        (projectile-current-project-files))))
     (makefile-executor-execute-target
      (if (= (length files) 1)
          (car files)
@@ -156,19 +181,24 @@ If there are several Makefiles, a prompt to select one of them is shown."
   "Execute the most recently executed Makefile target.
 
 If none is set, prompt for it using
-  `makefile-executor-execute-project-target'.  If the universal
-  argument is given, always prompt."
+`makefile-executor-execute-project-target'.  If the universal
+argument is given, always prompt."
   (interactive "P")
-  (let ((targets (gethash (projectile-project-root)
-                          makefile-executor-cache)))
+
+  (let ((targets (makefile-executor-get-cache)))
     (if (or arg (not targets))
-        (makefile-executor-execute-project-target)
+        (if (featurep 'projectile)
+            (makefile-executor-execute-project-target)
+          (makefile-executor-execute-target))
       (makefile-executor-execute-target (car targets)
                                         (cadr targets)))))
 
-(def-projectile-commander-method ?m
+;; This is so that the library is useful even if one does not have
+;; `projectile' installed.
+(when (featurep 'projectile)
+  (def-projectile-commander-method ?m
     "Execute makefile targets in project."
-    (funcall makefile-executor-projectile-style))
+    (funcall makefile-executor-projectile-style)))
 
 (provide 'makefile-executor)
 
