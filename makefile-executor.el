@@ -152,14 +152,16 @@ If there are several Makefiles, a prompt to select one of them is shown."
        (completing-read "Makefile: " files)))))
 
 ;;;###autoload
-(defun makefile-executor-execute-last ()
+(defun makefile-executor-execute-last (arg)
   "Execute the most recently executed Makefile target.
 
-If none is set, prompt for it using `makefile-executor-execute-project-target'."
-  (interactive)
+If none is set, prompt for it using
+  `makefile-executor-execute-project-target'.  If the universal
+  argument is given, always prompt."
+  (interactive "P")
   (let ((targets (gethash (projectile-project-root)
                           makefile-executor-cache)))
-    (if (not targets)
+    (if (or arg (not targets))
         (makefile-executor-execute-project-target)
       (makefile-executor-execute-target (car targets)
                                         (cadr targets)))))
