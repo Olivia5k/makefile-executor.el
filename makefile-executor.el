@@ -174,7 +174,8 @@ If there are several Makefiles, a prompt to select one of them is shown."
     (makefile-executor-execute-target
      (if (= (length files) 1)
          (car files)
-       (completing-read "Makefile: " files)))))
+       (concat (projectile-project-root)
+               (completing-read "Makefile: " files))))))
 
 ;;;###autoload
 (defun makefile-executor-execute-last (arg)
