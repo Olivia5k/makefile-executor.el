@@ -136,8 +136,9 @@ FILENAME defaults to current buffer."
   (let ((target (or target
                     (completing-read "target: " (makefile-executor-get-targets filename)))))
     (makefile-executor-store-cache filename target)
-    (compile (format "make -f %s %s"
+    (compile (format "make -f %s -C %s %s"
                      (shell-quote-argument filename)
+                     (file-name-directory filename)
                      target))))
 
 (defun makefile-executor-store-cache (filename target)
