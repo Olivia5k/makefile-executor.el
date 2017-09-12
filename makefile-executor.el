@@ -174,11 +174,12 @@ If there are several Makefiles, a prompt to select one of them is shown."
   (when (not (featurep 'projectile))
     (error "You need to install 'projectile' for this function to work"))
 
-  (makefile-executor-execute-target
-   (if (= (length files) 1)
-       (car files)
-     (concat (projectile-project-root)
-             (completing-read "Makefile: " (makefile-executor-get-makefiles))))))
+  (let ((files (makefile-executor-get-makefiles)))
+    (makefile-executor-execute-target
+     (if (= (length files) 1)
+         (car files)
+       (concat (projectile-project-root)
+               (completing-read "Makefile: " files))))))
 
 ;;;###autoload
 (defun makefile-executor-execute-last (arg)
