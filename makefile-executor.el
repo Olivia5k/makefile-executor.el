@@ -160,8 +160,11 @@ If `projectile' is installed, use the `projectile-project-root'. If
              (file-truename buffer-file-name))
            makefile-executor-cache))
 
+(defun makefile-executor-makefile-p (f)
+  (s-suffix? "makefile" (s-downcase f)))
+
 (defun makefile-executor-get-makefiles ()
-  (-filter (lambda (f) (s-suffix? "makefile" (s-downcase f)))
+  (-filter 'makefile-executor-makefile-p
            (projectile-current-project-files)))
 
 ;;;###autoload
