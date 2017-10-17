@@ -182,12 +182,15 @@ as initial input for convenience in executing the most relevant Makefile."
   (let ((files (makefile-executor-get-makefiles)))
     (makefile-executor-execute-target
      (if (= (length files) 1)
-         (car files)
+         (concat (projectile-project-root)
+                 (car files))
        ;; Get the dominating file dir so we can use that as initial input
        (let* ((bn (or (buffer-file-name) default-directory))
               (fn (or (locate-dominating-file bn "Makefile")
                       (locate-dominating-file bn "makefile")))
-              (init (file-relative-name fn (projectile-project-root))))
+              (relpath (file-relative-name fn (projectile-project-root)))
+              ;; This removes `./` so that the Makefile at the root is selectable
+              (init (if (not (s-equals? relpath "./")) relpath "")))
          (concat (projectile-project-root)
                  (completing-read "Makefile: " files nil t init)))))))
 
