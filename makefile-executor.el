@@ -89,6 +89,10 @@ Bindings in `makefile-mode':
           (const :tag "Run most recently executed target"
                  makefile-executor-execute-last)))
 
+(defcustom makefile-executor-ignore "vendor/"
+  "Regexp of paths that should be filtered when looking for Makefiles."
+  :type 'string)
+
 ;; Based on http://stackoverflow.com/a/26339924/983746
 (defvar makefile-executor-list-target-code
   (format
@@ -161,7 +165,8 @@ If `projectile' is installed, use the `projectile-project-root'. If
            makefile-executor-cache))
 
 (defun makefile-executor-makefile-p (f)
-  (s-suffix? "makefile" (s-downcase f)))
+  (and (s-suffix? "makefile" (s-downcase f))
+       (not (string-match makefile-executor-ignore f))))
 
 (defun makefile-executor-get-makefiles ()
   (-filter 'makefile-executor-makefile-p
