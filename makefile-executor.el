@@ -184,20 +184,24 @@ as initial input for convenience in executing the most relevant Makefile."
   (when (not (featurep 'projectile))
     (error "You need to install 'projectile' for this function to work"))
 
-  (let ((files (makefile-executor-get-makefiles)))
+  (let* ((files (makefile-executor-get-makefiles))
+         (filename
+          (if (= (length files) 1)
+              (car files)
+            ;; Get the dominating file dir so we can use that as initial input
+            ;; This means that if we are in a large project with a lot
+            ;; of Makefiles, the closest one will be the initial suggestion.
+            (let* ((bn (or (buffer-file-name) default-directory))
+                   (fn (or (locate-dominating-file bn "Makefile")
+                           (locate-dominating-file bn "makefile")))
+                   (relpath (file-relative-name fn (projectile-project-root)))
+                   ;; If we are at the root, we don't need the initial
+                   ;; input. If we have it as `./`, the Makefile at
+                   ;; the root will not be selectable, which is confusing.
+                   (init (if (not (s-equals? relpath "./")) relpath "")))
+              (completing-read "Makefile: " files nil t init)))))
     (makefile-executor-execute-target
-     (if (= (length files) 1)
-         (concat (projectile-project-root)
-                 (car files))
-       ;; Get the dominating file dir so we can use that as initial input
-       (let* ((bn (or (buffer-file-name) default-directory))
-              (fn (or (locate-dominating-file bn "Makefile")
-                      (locate-dominating-file bn "makefile")))
-              (relpath (file-relative-name fn (projectile-project-root)))
-              ;; This removes `./` so that the Makefile at the root is selectable
-              (init (if (not (s-equals? relpath "./")) relpath "")))
-         (concat (projectile-project-root)
-                 (completing-read "Makefile: " files nil t init)))))))
+     (concat (projectile-project-root) filename))))
 
 ;;;###autoload
 (defun makefile-executor-execute-last (arg)
