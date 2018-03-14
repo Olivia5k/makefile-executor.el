@@ -127,6 +127,16 @@ Optional argument FILENAME defaults to current buffer."
       (delete-file file)
       (s-split "\n" out t))))
 
+(defun makefile-executor-select-target (&optional filename)
+  "Prompt the user for a Makefile target.
+
+If there is only one, it is returned immediately."
+
+  (let ((targets (makefile-executor-get-targets (or filename (buffer-file-name)))))
+    (if (= (length targets) 1)
+        (car targets)
+      (completing-read "target: " targets))))
+
 ;;;###autoload
 (defun makefile-executor-execute-target (filename &optional target)
   "Execute a Makefile target from FILENAME.
@@ -135,8 +145,7 @@ FILENAME defaults to current buffer."
   (interactive
    (list (file-truename buffer-file-name)))
 
-  (let ((target (or target
-                    (completing-read "target: " (makefile-executor-get-targets filename)))))
+  (let ((target (or target (makefile-executor-select-target filename))))
     (makefile-executor-store-cache filename target)
     (compile (format "make -f %s -C %s %s"
                      (shell-quote-argument filename)
