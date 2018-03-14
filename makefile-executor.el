@@ -234,9 +234,12 @@ argument is given, always prompt."
   (when (not (featurep 'projectile))
     (error "You need to install 'projectile' for this function to work"))
 
-  (find-file
-   (concat (projectile-project-root)
-           (completing-read "Makefile: " (makefile-executor-get-makefiles)))))
+  (let ((makefiles (makefile-executor-get-makefiles)))
+    (find-file
+     (concat (projectile-project-root)
+             (if (= 1 (length makefiles))
+                 (car makefiles)
+               (completing-read "Makefile: " makefiles))))))
 
 ;; This is so that the library is useful even if one does not have
 ;; `projectile' installed.
