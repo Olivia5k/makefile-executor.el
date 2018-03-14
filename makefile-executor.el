@@ -223,8 +223,9 @@ argument is given, always prompt."
         (if (featurep 'projectile)
             (makefile-executor-execute-project-target)
           (makefile-executor-execute-target))
-      (makefile-executor-execute-target (car targets)
-                                        (cadr targets)))))
+      (makefile-executor-execute-target
+       (car targets)
+       (cadr targets)))))
 
 ;;;###autoload
 (defun makefile-executor-goto-makefile ()
