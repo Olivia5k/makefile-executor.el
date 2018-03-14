@@ -60,6 +60,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-e") 'makefile-executor-execute-target)
     (define-key map (kbd "C-c C-c") 'makefile-executor-execute-last)
+    (define-key map (kbd "C-c C-d") 'makefile-executor-execute-dedicated-buffer)
     map)
   "Keymap for `makefile-executor-mode'.")
 
@@ -208,6 +209,25 @@ as initial input for convenience in executing the most relevant Makefile."
               (completing-read "Makefile: " files nil t init)))))
     (makefile-executor-execute-target
      (concat (projectile-project-root) filename))))
+
+;;;###autoload
+(defun makefile-executor-execute-dedicated-buffer (filename &optional target)
+  "Runs a makefile target in a dedicated compile buffer.
+
+The dedicated buffer will be named \"*<target>*\".  If
+`projectile' is installed and the makefile is in a project the
+project name will be prepended to the dedicated buffer name."
+  (interactive (list
+      (buffer-file-name)))
+  (let* ((target (makefile-executor-select-target filename))
+         (buffer-name
+          (if (and (featurep 'projectile) (projectile-project-p))
+              (format "*%s-%s*" (projectile-project-name) target)
+            (format "*%s*" target))))
+
+    (makefile-executor-execute-target filename target)
+    (with-current-buffer (get-buffer "*compilation*")
+      (rename-buffer buffer-name))))
 
 ;;;###autoload
 (defun makefile-executor-execute-last (arg)
