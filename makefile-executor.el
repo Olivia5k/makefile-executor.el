@@ -219,7 +219,7 @@ The dedicated buffer will be named \"*<target>*\".  If
 project name will be prepended to the dedicated buffer name."
   (interactive (list
       (buffer-file-name)))
-  (let* ((target (makefile-executor-select-target filename))
+  (let* ((target (or target (makefile-executor-select-target filename)))
          (buffer-name
           (if (and (featurep 'projectile) (projectile-project-p))
               (format "*%s-%s*" (projectile-project-name) target)
