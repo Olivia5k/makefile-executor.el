@@ -120,14 +120,12 @@ Optional argument FILENAME defaults to current buffer."
 
     (f-write-text makefile-contents 'utf-8 file)
 
-    (with-temp-buffer
-      (shell-command
-       (format "make -f %s %s"
-               (shell-quote-argument file)
-               makefile-executor-special-target)
-       (current-buffer))
+    (let ((out (shell-command-to-string
+                (format "make -f %s %s"
+                        (shell-quote-argument file)
+                        makefile-executor-special-target))))
       (delete-file file)
-      (s-split "\n" (buffer-string) t))))
+      (s-split "\n" out t))))
 
 ;;;###autoload
 (defun makefile-executor-execute-target (filename &optional target)
