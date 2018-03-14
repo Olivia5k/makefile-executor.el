@@ -100,7 +100,7 @@ Bindings in `makefile-mode':
    makefile-executor-special-target makefile-executor-special-target)
   "Target used to list all other Makefile targets.")
 
-(defun makefile-executor-get-targets (&optional filename)
+(defun makefile-executor-get-targets (filename)
   "Return a list of all the targets of a Makefile.
 
 To list them in a computed manner, a new special target is added,
@@ -108,8 +108,7 @@ the buffer is written to a temporary Makefile which is executed
 with the special target.
 
 Optional argument FILENAME defaults to current buffer."
-  (let* ((filename (or filename (buffer-file-name)))
-         (file (make-temp-file "makefile"))
+  (let* ((file (make-temp-file "makefile"))
          (makefile-contents
           (concat
            (with-temp-buffer
