@@ -1,6 +1,6 @@
 # makefile-executor.el
 
-*Various extensions to makefile-mode*
+[![MELPA](https://melpa.org/packages/makefile-executor-badge.svg)](https://melpa.org/#/makefile-executor)
 
 ![Showing calculated targets](img/screenshot.png)
 
@@ -27,6 +27,9 @@ Using `use-package`:
 - Re-running the last execution.  We usually run things in Makefiles
   _many_ times after all!  Bound to `C-c C-c` in `makefile-mode` when
   `makefile-executor-mode` is enabled.
+- Running a makefile target in a dedicated buffer.  Useful when
+  starting services and other long-running things!  Bound to `C-c
+  C-d` in `makefile-mode` when `makefile-executor-mode` is enabled.
 - Calculation of variables et.c.; `$(BINARY)` will show up as what it
   evaluates to.
 - If [projectile](https://github.com/bbatsov/projectile) is installed,
