@@ -175,7 +175,7 @@ If `projectile' is installed, use the `projectile-project-root'. If
            makefile-executor-cache))
 
 (defun makefile-executor-makefile-p (f)
-  (and (s-suffix? "makefile" (s-downcase f))
+  (and (s-contains? "makefile" (s-downcase f))
        (not (string-match makefile-executor-ignore f))))
 
 (defun makefile-executor-get-makefiles ()
