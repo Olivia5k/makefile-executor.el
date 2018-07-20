@@ -194,24 +194,41 @@ as initial input for convenience in executing the most relevant Makefile."
   (when (not (featurep 'projectile))
     (error "You need to install 'projectile' for this function to work"))
 
-  (let* ((files (makefile-executor-get-makefiles))
-         (filename
-          (if (= (length files) 1)
-              (car files)
-            ;; Get the dominating file dir so we can use that as initial input
-            ;; This means that if we are in a large project with a lot
-            ;; of Makefiles, the closest one will be the initial suggestion.
-            (let* ((bn (or (buffer-file-name) default-directory))
-                   (fn (or (locate-dominating-file bn "Makefile")
-                           (locate-dominating-file bn "makefile")))
-                   (relpath (file-relative-name fn (projectile-project-root)))
-                   ;; If we are at the root, we don't need the initial
-                   ;; input. If we have it as `./`, the Makefile at
-                   ;; the root will not be selectable, which is confusing.
-                   (init (if (not (s-equals? relpath "./")) relpath "")))
-              (completing-read "Makefile: " files nil t init)))))
+  (let* ((files (makefile-executor-get-makefiles)))
+    (when (= (length files) 0)
+      (user-error "No makefiles found in this project"))
+
     (makefile-executor-execute-target
-     (concat (projectile-project-root) filename))))
+     (concat
+      (projectile-project-root)
+      ;; If there is just the one file, return that one immediately
+      (if (= (length files) 1)
+          (car files)
+        ;; If there are more, do a completing read, and use the
+        ;; closest makefile in the project as an initial input, if
+        ;; possible.
+        (completing-read "Makefile: " files nil t
+                         (makefile-executor--initial-input files)))))))
+
+(defun makefile-executor--initial-input (files)
+  "From a list of files, return the Makefile closest to the current
+  buffer.
+
+If none can be found, returns empty string."
+  ;; Get the dominating file dir so we can use that as initial input
+  ;; This means that if we are in a large project with a lot
+  ;; of Makefiles, the closest one will be the initial suggestion.
+  (let* ((bn (or (buffer-file-name) default-directory))
+         (fn (or (locate-dominating-file bn "Makefile")
+                 (locate-dominating-file bn "makefile")))
+         (relpath (file-relative-name fn (projectile-project-root))))
+    ;; If we are at the root, we don't need the initial
+    ;; input. If we have it as `./`, the Makefile at
+    ;; the root will not be selectable, which is confusing. Hence, we
+    ;; remove that
+    (if (not (s-equals? relpath "./"))
+        relpath
+      "")))
 
 ;;;###autoload
 (defun makefile-executor-execute-dedicated-buffer (filename &optional target)
