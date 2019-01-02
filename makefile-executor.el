@@ -58,6 +58,7 @@
 (require 'make-mode)
 (require 's)
 (require 'projectile nil t)
+(require 'magefile-executor)
 
 (defvar makefile-executor-mode-map
   (let ((map (make-sparse-keymap)))

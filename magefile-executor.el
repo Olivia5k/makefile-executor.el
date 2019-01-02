@@ -122,7 +122,7 @@ FILENAME defaults to current buffer."
    (list (file-truename buffer-file-name)))
 
   (let* ((target (or target (magefile-executor-select-target filename)))
-         (default-directory (f-dirname target)))
+         (default-directory (f-dirname filename)))
     (compile (format "mage -v %s" target))))
 
 (defun magefile-executor-store-cache (filename target)
