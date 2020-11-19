@@ -152,7 +152,7 @@ FILENAME defaults to current buffer."
     (makefile-executor-store-cache filename target)
     (compile (format "make -f %s -C %s %s"
                      (shell-quote-argument filename)
-                     (file-name-directory filename)
+                     (shell-quote-argument (file-name-directory filename))
                      target))))
 
 (defun makefile-executor-store-cache (filename target)
