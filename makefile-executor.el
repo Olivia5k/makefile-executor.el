@@ -5,8 +5,8 @@
 ;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
 ;; URL: https://github.com/thiderman/makefile-executor.el
 ;; Package-Version: 20170613
-;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.3") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
+;; Version: 0.2.0
+;; Package-Requires: ((emacs "27.1") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
 ;; Keywords: processes
 
 ;; This file is not part of GNU Emacs.
@@ -103,6 +103,14 @@ Bindings in `makefile-mode':
    ".PHONY: %s\n%s:\n	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'\n"
    makefile-executor-special-target makefile-executor-special-target)
   "Target used to list all other Makefile targets.")
+
+(defun makefile-executor-project-root ()
+  "Return the path to the project root, computed from projectile or project.el."
+  (cond
+   ((featurep 'projectile) (projectile-project-root))
+   ((project-current) (project-root (project-current)))
+   (t (user-error "Can't detect project root, install projectile or project.el")))
+  )
 
 (defun makefile-executor-get-targets (filename)
   "Return a list of all the targets of a Makefile.
