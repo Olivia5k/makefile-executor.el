@@ -58,6 +58,7 @@
 (require 'make-mode)
 (require 's)
 (require 'projectile nil t)
+(require 'project nil t)
 
 (defvar makefile-executor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -103,14 +104,6 @@ Bindings in `makefile-mode':
    ".PHONY: %s\n%s:\n	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'\n"
    makefile-executor-special-target makefile-executor-special-target)
   "Target used to list all other Makefile targets.")
-
-(defun makefile-executor-project-root ()
-  "Return the path to the project root, computed from projectile or project.el."
-  (cond
-   ((featurep 'projectile) (projectile-project-root))
-   ((project-current) (project-root (project-current)))
-   (t (user-error "Can't detect project root, install projectile or project.el")))
-  )
 
 (defun makefile-executor-get-targets (filename)
   "Return a list of all the targets of a Makefile.
@@ -168,7 +161,7 @@ FILENAME defaults to current buffer."
 
 If `projectile' is installed, use the `projectile-project-root'. If
   not, just use the current filename."
-  (puthash (if (featurep 'projectile) (projectile-project-root) filename)
+  (puthash (if (project-current) (project-root (project-current)) filename)
            (list filename target)
            makefile-executor-cache))
 
@@ -177,8 +170,8 @@ If `projectile' is installed, use the `projectile-project-root'. If
 
 If `projectile' is installed, use the `projectile-project-root'. If
   not, just use the current filename."
-  (gethash (if (featurep 'projectile)
-               (projectile-project-root)
+  (gethash (if (project-current)
+               (project-root (project-current))
              (file-truename buffer-file-name))
            makefile-executor-cache))
 
@@ -188,7 +181,7 @@ If `projectile' is installed, use the `projectile-project-root'. If
 
 (defun makefile-executor-get-makefiles ()
   (-filter 'makefile-executor-makefile-p
-           (projectile-current-project-files)))
+           (project-files (project-current))))
 
 ;;;###autoload
 (defun makefile-executor-execute-project-target ()
@@ -199,16 +192,11 @@ If so, the parent directory of the closest Makefile is added
 as initial input for convenience in executing the most relevant Makefile."
   (interactive)
 
-  (when (not (featurep 'projectile))
-    (error "You need to install 'projectile' for this function to work"))
-
   (let* ((files (makefile-executor-get-makefiles)))
     (when (= (length files) 0)
       (user-error "No makefiles found in this project"))
 
     (makefile-executor-execute-target
-     (concat
-      (projectile-project-root)
       ;; If there is just the one file, return that one immediately
       (if (= (length files) 1)
           (car files)
@@ -216,7 +204,7 @@ as initial input for convenience in executing the most relevant Makefile."
         ;; closest makefile in the project as an initial input, if
         ;; possible.
         (completing-read "Makefile: " files nil t
-                         (makefile-executor--initial-input files)))))))
+                         (makefile-executor--initial-input files))))))
 
 (defun makefile-executor--initial-input (files)
   "From a list of files, return the Makefile closest to the current
@@ -229,7 +217,7 @@ If none can be found, returns empty string."
   (let* ((bn (or (buffer-file-name) default-directory))
          (fn (or (locate-dominating-file bn "Makefile")
                  (locate-dominating-file bn "makefile")))
-         (relpath (file-relative-name fn (projectile-project-root))))
+         (relpath (file-relative-name fn (project-root (project-current)))))
     ;; If we are at the root, we don't need the initial
     ;; input. If we have it as `./`, the Makefile at
     ;; the root will not be selectable, which is confusing. Hence, we
@@ -270,7 +258,7 @@ argument is given, always prompt."
 
   (let ((targets (makefile-executor-get-cache)))
     (if (or arg (not targets))
-        (if (featurep 'projectile)
+        (if (or (featurep 'projectile) (featurep 'project))
             (makefile-executor-execute-project-target)
           (makefile-executor-execute-target))
       (makefile-executor-execute-target
@@ -282,15 +270,11 @@ argument is given, always prompt."
   "Interactively choose a Makefile to visit."
   (interactive)
 
-  (when (not (featurep 'projectile))
-    (error "You need to install 'projectile' for this function to work"))
-
   (let ((makefiles (makefile-executor-get-makefiles)))
     (find-file
-     (concat (projectile-project-root)
              (if (= 1 (length makefiles))
                  (car makefiles)
-               (completing-read "Makefile: " makefiles))))))
+               (completing-read "Makefile: " makefiles)))))
 
 ;; This is so that the library is useful even if one does not have
 ;; `projectile' installed.
