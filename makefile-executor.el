@@ -5,7 +5,7 @@
 ;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
 ;; URL: https://github.com/thiderman/makefile-executor.el
 ;; Package-Version: 20170613
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "27.1") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
 ;; Keywords: processes
 
