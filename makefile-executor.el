@@ -216,11 +216,13 @@ If none can be found, returns empty string."
   (let* ((bn (or (buffer-file-name) default-directory))
          (fn (or (locate-dominating-file bn "Makefile")
                  (locate-dominating-file bn "makefile")))
-         (relpath (file-relative-name fn (project-root (project-current)))))
+         (root (if (project-current) (project-root (project-current)) file-relative-name) )
+         (relpath (file-relative-name (or fn root) root)))
     ;; If we are at the root, we don't need the initial
     ;; input. If we have it as `./`, the Makefile at
     ;; the root will not be selectable, which is confusing. Hence, we
     ;; remove that
+    (unless fn (user-error "No Makefiles found in project"))
     (if (not (s-equals? relpath "./"))
         relpath
       "")))
