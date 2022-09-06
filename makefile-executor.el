@@ -160,7 +160,7 @@ FILENAME defaults to current buffer."
 
 If you are in a project, this uses `project-root'. If
   not, it uses the current filename."
-  (puthash (if (project-current) (project-root (project-current)) filename)
+  (puthash (makefile-executor--project-root filename)
            (list filename target)
            makefile-executor-cache))
 
@@ -169,9 +169,7 @@ If you are in a project, this uses `project-root'. If
 
 If you are in a project, this uses `project-root'. If
   not, just use the current filename."
-  (gethash (if (project-current)
-               (project-root (project-current))
-             (file-truename buffer-file-name))
+  (gethash (makefile-executor--project-root (file-truename buffer-file-name))
            makefile-executor-cache))
 
 (defun makefile-executor-makefile-p (f)
@@ -181,6 +179,11 @@ If you are in a project, this uses `project-root'. If
 (defun makefile-executor-get-makefiles ()
   (-filter 'makefile-executor-makefile-p
            (project-files (project-current))))
+
+(defun makefile-executor--project-root (&optional otherwise)
+  (if (project-current)
+      (project-root (project-current))
+    otherwise))
 
 ;;;###autoload
 (defun makefile-executor-execute-project-target ()
@@ -216,7 +219,7 @@ If none can be found, returns empty string."
   (let* ((bn (or (buffer-file-name) default-directory))
          (fn (or (locate-dominating-file bn "Makefile")
                  (locate-dominating-file bn "makefile")))
-         (root (if (project-current) (project-root (project-current)) file-relative-name) )
+         (root (makefile-executor--project-root nil))
          (relpath (file-relative-name (or fn root) root)))
     ;; If we are at the root, we don't need the initial
     ;; input. If we have it as `./`, the Makefile at
