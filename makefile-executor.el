@@ -157,10 +157,10 @@ FILENAME defaults to current buffer."
                      target))))
 
 (defun makefile-executor-store-cache (filename target)
-  "Stores the FILENAME and TARGET in the cache.
+  "Store the FILENAME and TARGET in the cache.
 
-If `projectile' is installed, use the `projectile-project-root'. If
-  not, just use the current filename."
+If you are in a project, this uses `project-root'. If
+  not, it uses the current filename."
   (puthash (if (project-current) (project-root (project-current)) filename)
            (list filename target)
            makefile-executor-cache))
@@ -168,7 +168,7 @@ If `projectile' is installed, use the `projectile-project-root'. If
 (defun makefile-executor-get-cache ()
   "Gets the cache for the current project or Makefile.
 
-If `projectile' is installed, use the `projectile-project-root'. If
+If you are in a project, this uses `project-root'. If
   not, just use the current filename."
   (gethash (if (project-current)
                (project-root (project-current))
