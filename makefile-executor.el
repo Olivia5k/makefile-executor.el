@@ -208,11 +208,10 @@ as initial input for convenience in executing the most relevant Makefile."
         ;; closest makefile in the project as an initial input, if
         ;; possible.
         (completing-read "Makefile: " files nil t
-                         (makefile-executor--initial-input files)))))))
+                         (makefile-executor--initial-input)))))))
 
-(defun makefile-executor--initial-input (files)
-  "From a list of files, return the Makefile closest to the current
-  buffer.
+(defun makefile-executor--initial-input ()
+  "Return the Makefile closest to the current buffer.
 
 If none can be found, returns empty string."
   ;; Get the dominating file dir so we can use that as initial input
@@ -264,7 +263,7 @@ argument is given, always prompt."
     (if (or arg (not targets))
         (if (featurep 'projectile)
             (makefile-executor-execute-project-target)
-          (makefile-executor-execute-target))
+          (makefile-executor-execute-target nil))
       (makefile-executor-execute-target
        (car targets)
        (cadr targets)))))
