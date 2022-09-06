@@ -4,7 +4,7 @@
 
 ;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
 ;; URL: https://github.com/thiderman/makefile-executor.el
-;; Package-Version: 20170613
+;; Package-Version: 2022-09-06
 ;; Version: 0.2.1
 ;; Package-Requires: ((emacs "27.1") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
 ;; Keywords: processes
@@ -58,7 +58,7 @@
 (require 'make-mode)
 (require 's)
 (require 'projectile nil t)
-(require 'project nil t)
+(require 'project)
 
 (defvar makefile-executor-mode-map
   (let ((map (make-sparse-keymap)))
@@ -258,9 +258,9 @@ argument is given, always prompt."
 
   (let ((targets (makefile-executor-get-cache)))
     (if (or arg (not targets))
-        (if (or (featurep 'projectile) (featurep 'project))
+        (if (project-current)
             (makefile-executor-execute-project-target)
-          (makefile-executor-execute-target))
+          (makefile-executor-execute-target (buffer-file-name)))
       (makefile-executor-execute-target
        (car targets)
        (cadr targets)))))
