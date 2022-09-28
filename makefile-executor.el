@@ -206,7 +206,7 @@ as initial input for convenience in executing the most relevant Makefile."
         ;; closest makefile in the project as an initial input, if
         ;; possible.
         (completing-read "Makefile: " files nil t
-                         (makefile-executor--initial-input)))))))
+                         (makefile-executor--initial-input))))))
 
 
 (defun makefile-executor--initial-input ()
