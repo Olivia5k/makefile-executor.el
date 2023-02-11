@@ -97,38 +97,20 @@ Bindings in `makefile-mode':
   "Regexp of paths that should be filtered when looking for Makefiles."
   :type 'string)
 
-;; Based on http://stackoverflow.com/a/26339924/983746
-(defvar makefile-executor-list-target-code
-  (format
-   ".PHONY: %s\n%s:\n	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\\n)# Files(\\n|$$)/,/(^|\\n)# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'\n"
-   makefile-executor-special-target makefile-executor-special-target)
-  "Target used to list all other Makefile targets.")
-
 (defun makefile-executor-get-targets (filename)
   "Return a list of all the targets of a Makefile.
 
-To list them in a computed manner, a new special target is added,
-the buffer is written to a temporary Makefile which is executed
-with the special target.
+To list them in a computed manner, print the Makefile database
+using `make -p` and process the output.
 
 Optional argument FILENAME defaults to current buffer."
-  (let* ((file (make-temp-file "makefile"))
-         (makefile-contents
-          (concat
-           (with-temp-buffer
-             (insert-file-contents filename)
-             (buffer-string))
-           "\n\n"
-           makefile-executor-list-target-code)))
-
-    (f-write-text makefile-contents 'utf-8 file)
-
-    (let ((out (shell-command-to-string
-                (format "make -f %s %s"
-                        (shell-quote-argument file)
-                        makefile-executor-special-target))))
-      (delete-file file)
-      (s-split "\n" out t))))
+  (s-split "\n"
+    (shell-command-to-string
+     ;; Based on http://stackoverflow.com/a/26339924/983746
+     (format "make -pRrq -f %s -C %s : 2>/dev/null | awk -v RS= -F: '/(^|\\n)# Files(\\n|$)/,/(^|\\n)# Finished Make data base/ {if ($1 !~ \"^[#.]\") {print $1}}' | sort | grep -E -v -e '^[^[:alnum:]]'"
+           (shell-quote-argument filename)
+           (shell-quote-argument (file-name-directory filename))))
+    t))
 
 (defun makefile-executor-select-target (&optional filename)
   "Prompt the user for a Makefile target.
