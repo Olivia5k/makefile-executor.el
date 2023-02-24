@@ -1,11 +1,11 @@
 ;;; makefile-executor.el --- Commands for conveniently running makefile targets -*- lexical-binding: t -*-
 
-;; Copyright (C) 2017 Lowe Thiderman
+;; Copyright (C) 2017 Olivia Thiderman
 
-;; Author: Lowe Thiderman <lowe.thiderman@gmail.com>
-;; URL: https://github.com/thiderman/makefile-executor.el
-;; Package-Version: 20220906
-;; Version: 0.2.0
+;; Author: Olivia Thiderman <olivia@thiderman.org>
+;; URL: https://github.com/Olivia5k/makefile-executor.el
+;; Package-Version: 20230224
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "27.1") (dash "2.11.0") (f "0.11.0") (s "1.10.0"))
 ;; Keywords: processes
 
