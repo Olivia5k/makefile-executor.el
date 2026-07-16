@@ -35,7 +35,8 @@ Using `use-package`:
 - If [projectile](https://github.com/bbatsov/projectile) is installed,
   execution from any buffer in a project.  If more than one Makefile
   is found, an interactive prompt for one is shown.  This is added to
-  the `projectile-commander` on the `m` key.
+  the `projectile-dispatch` menu on the `m` key, or to
+  `projectile-commander` on older Projectile releases.
 
 ### Public API
 

@@ -43,7 +43,8 @@
 ;;   evaluates to.
 ;; - Via `project.el', execution from any buffer in a project.
 ;;   If more than one makefile is found, an interactive prompt for one is shown.
-;;   If `projectile' is installed, this is added to the `projectile-commander' on the 'm' key.
+;;   If `projectile' is installed, this is added to `projectile-dispatch',
+;;   or to `projectile-commander' on older Projectile releases.
 ;;
 ;; To enable it, use the following snippet to add the hook into 'makefile-mode':
 ;;
@@ -57,6 +58,7 @@
 (require 'make-mode)
 (require 's)
 (require 'projectile nil t)
+(require 'transient nil t)
 (require 'project)
 
 (defvar makefile-executor-mode-map
@@ -86,7 +88,7 @@ Bindings in `makefile-mode':
   :prefix "makefile-executor-")
 
 (defcustom makefile-executor-projectile-style 'makefile-executor-execute-project-target
-  "Decides what to do when executing from `projectile-commander'."
+  "Decides what to do when executing from Projectile integration."
   :type '(choice
           (const :tag "Always choose target"
                  makefile-executor-execute-project-target)
@@ -264,10 +266,21 @@ argument is given, always prompt."
 
 ;; This is so that the library is useful even if one does not have
 ;; `projectile' installed.
+(defun makefile-executor-projectile-dispatch ()
+  "Execute Makefile targets using `makefile-executor-projectile-style'."
+  (interactive)
+  (funcall makefile-executor-projectile-style))
+
 (when (featurep 'projectile)
-  (def-projectile-commander-method ?m
-    "Execute makefile targets in project."
-    (funcall makefile-executor-projectile-style)))
+  (cond
+   ((and (fboundp 'transient-append-suffix)
+         (get 'projectile-dispatch 'transient--prefix))
+    (transient-append-suffix 'projectile-dispatch '(2 1 -1)
+      '("m" "make" makefile-executor-projectile-dispatch)))
+   ((fboundp 'def-projectile-commander-method)
+    (def-projectile-commander-method ?m
+      "Execute makefile targets in project."
+      (makefile-executor-projectile-dispatch)))))
 
 (provide 'makefile-executor)
 
