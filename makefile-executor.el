@@ -275,6 +275,10 @@ argument is given, always prompt."
   (cond
    ((and (fboundp 'transient-append-suffix)
          (get 'projectile-dispatch 'transient--prefix))
+    ;; Projectile 3.3 defines the dispatch layout on first invocation.
+    (when (and (fboundp 'projectile--dispatch-define)
+               (not (get 'projectile-dispatch 'transient--layout)))
+      (projectile--dispatch-define))
     (transient-append-suffix 'projectile-dispatch '(2 1 -1)
       '("m" "make" makefile-executor-projectile-dispatch)))
    ((fboundp 'def-projectile-commander-method)
